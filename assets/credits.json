@@ -1,0 +1,127 @@
+[
+  {
+    "file": "assets/art/mona-lisa.jpg",
+    "title": "Mona Lisa",
+    "creator": "Leonardo da Vinci",
+    "source": "https://commons.wikimedia.org/wiki/File:Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/last-supper.jpg",
+    "title": "The Last Supper",
+    "creator": "Leonardo da Vinci",
+    "source": "https://commons.wikimedia.org/wiki/File:Leonardo_da_Vinci_(1452-1519)_-_The_Last_Supper_(1495-1498).jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/vitruvian-man.jpg",
+    "title": "Vitruvian Man",
+    "creator": "Leonardo da Vinci",
+    "source": "https://commons.wikimedia.org/wiki/File:Vitruvian_Man_by_Leonardo_da_Vinci.jpg",
+    "license": "CC BY-SA 4.0",
+    "photographer": "Paris Orlando"
+  },
+  {
+    "file": "assets/art/davinci-flying-machine.jpg",
+    "title": "Drawing of a flying machine",
+    "creator": "Leonardo da Vinci",
+    "source": "https://commons.wikimedia.org/wiki/File:Leonardo_da_vinci,_Drawing_of_a_flying_machine.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/david.jpg",
+    "title": "David",
+    "creator": "Michelangelo",
+    "source": "https://commons.wikimedia.org/wiki/File:%27David%27_by_Michelangelo_FI_Acca_JBU_005.jpg",
+    "license": "CC BY 4.0",
+    "photographer": "Jörg Bittner Unna"
+  },
+  {
+    "file": "assets/art/pieta.jpg",
+    "title": "Pietà",
+    "creator": "Michelangelo",
+    "source": "https://commons.wikimedia.org/wiki/File:Michelangelo%27s_Pieta_5450_cropncleaned_edit.jpg",
+    "license": "CC BY 2.5",
+    "photographer": "Stanislav Traykov"
+  },
+  {
+    "file": "assets/art/sistine-ceiling.jpg",
+    "title": "Sistine Chapel ceiling",
+    "creator": "Michelangelo",
+    "source": "https://commons.wikimedia.org/wiki/File:CAPPELLA_SISTINA_Ceiling.jpg",
+    "license": "CC BY-SA 3.0",
+    "photographer": "Qypchak"
+  },
+  {
+    "file": "assets/art/creation-of-adam.jpg",
+    "title": "The Creation of Adam",
+    "creator": "Michelangelo",
+    "source": "https://commons.wikimedia.org/wiki/File:Creaci%C3%B3n_de_Ad%C3%A1n.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/florence-duomo.jpg",
+    "title": "Florence Cathedral (Santa Maria del Fiore)",
+    "creator": "Filippo Brunelleschi",
+    "source": "https://commons.wikimedia.org/wiki/File:Cattedrale_di_Santa_Maria_del_Fiore_Florenz_M%C3%A4rz_2014.jpg",
+    "license": "CC BY 3.0",
+    "photographer": "Felix König"
+  },
+  {
+    "file": "assets/art/st-peters.jpg",
+    "title": "St. Peter's Basilica",
+    "creator": "Donato Bramante, Michelangelo, and Carlo Maderno",
+    "source": "https://commons.wikimedia.org/wiki/File:St_Peter%27s_Basilica_Via_della_Conciliazione_(11999261766).jpg",
+    "license": "CC BY-SA 2.0",
+    "photographer": "George Rex"
+  },
+  {
+    "file": "assets/art/titian-bacchus-ariadne.jpg",
+    "title": "Bacchus and Ariadne",
+    "creator": "Titian",
+    "source": "https://commons.wikimedia.org/wiki/File:Titian_-_Bacchus_and_Ariadne_-_Google_Art_Project.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/titian-assumption.jpg",
+    "title": "Assumption of the Virgin",
+    "creator": "Titian",
+    "source": "https://commons.wikimedia.org/wiki/File:Tizian_041.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/school-of-athens.jpg",
+    "title": "The School of Athens",
+    "creator": "Raphael",
+    "source": "https://commons.wikimedia.org/wiki/File:The_School_of_Athens_by_Raffaello_Sanzio_da_Urbino.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/birth-of-venus.jpg",
+    "title": "The Birth of Venus",
+    "creator": "Sandro Botticelli",
+    "source": "https://commons.wikimedia.org/wiki/File:Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/medieval-madonna.jpg",
+    "title": "Santa Trinita Maestà",
+    "creator": "Cimabue",
+    "source": "https://commons.wikimedia.org/wiki/File:Cimabue_-_Maest%C3%A0_di_Santa_Trinita_-_Google_Art_Project.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/art/venice-grand-canal.jpg",
+    "title": "The Grand Canal with San Simeone Piccolo",
+    "creator": "Canaletto",
+    "source": "https://commons.wikimedia.org/wiki/File:Giovanni_Antonio_Canal_-_Venice-_The_Grand_Canal_with_S._Simeone_Piccolo_-_National_Gallery_London.jpg",
+    "license": "Public domain"
+  },
+  {
+    "file": "assets/map/italy-relief.jpg",
+    "title": "Italy relief location map",
+    "creator": "Eric Gaba (Sting) and NordNordWest",
+    "source": "https://commons.wikimedia.org/wiki/File:Italy_relief_location_map.jpg",
+    "license": "CC BY-SA 3.0"
+  }
+]
