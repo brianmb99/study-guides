@@ -253,6 +253,7 @@ main {
   align-items: center;
   min-height: 44px;
   margin-top: 8px;
+  margin-right: 20px;
 }
 
 .prompt {

@@ -5,23 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f7f0e1">
-  <title>Renaissance Test Prep</title>
+  <title>Study Guides</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect fill='%239c3418' width='16' height='16' rx='2'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 18px; }
+    body {
+      margin: 0;
+      color: #1c140c;
+      background: #e4d3b4;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+    }
+    main {
+      max-width: 640px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: calc(24px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+      background: #f7f0e1;
+    }
+    h1 {
+      font-family: Georgia, "Iowan Old Style", Palatino, serif;
+      font-size: 1.7rem;
+      margin: 0 0 4px;
+    }
+    .lede { margin: 0 0 20px; color: #5b4a36; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    a.guide {
+      display: block;
+      padding: 16px;
+      border: 1px solid #e0d0b4;
+      border-left: 5px solid #9c3418;
+      border-radius: 14px;
+      background: #fffaf2;
+      color: inherit;
+      text-decoration: none;
+    }
+    a.guide:active { background: #f6ead3; }
+    a.guide:focus-visible { outline: 3px solid #c8962e; outline-offset: 2px; }
+    .title {
+      display: block;
+      font-family: Georgia, "Iowan Old Style", Palatino, serif;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .meta { display: block; margin-top: 2px; font-size: 0.85rem; color: #7a3a1c; font-weight: 600; }
+    .blurb { display: block; margin-top: 6px; font-size: 0.95rem; color: #3d2f20; }
+    .badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: #c8962e;
+      color: #1c140c;
+      font: 700 0.7rem/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      vertical-align: middle;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+  </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="top-side" id="top-start"></div>
-      <h1 id="top-title">Renaissance Test Prep</h1>
-      <div class="top-side top-meta" id="top-meta"></div>
-    </header>
-    <main id="view"></main>
-  </div>
-  <div class="bottombar" id="bottombar" hidden></div>
-  <div id="live" class="visually-hidden" aria-live="polite"></div>
-  <noscript><p>This study page needs JavaScript. Turn it on, then reload.</p></noscript>
-  <script src="content.js"></script>
-  <script src="app.js"></script>
+  <main>
+    <h1>Study Guides</h1>
+    <p class="lede">Flashcards, quizzes, and maps that teach as you go. Newest first.</p>
+    <ul id="guides"></ul>
+    <noscript>
+      <ul><li><a class="guide" href="renaissance/"><span class="title">The Renaissance</span></a></li></ul>
+    </noscript>
+  </main>
+  <script>
+    // Add new guides here; the list always sorts newest first by `added`.
+    const GUIDES = [
+      {
+        path: "renaissance/",
+        title: "The Renaissance",
+        meta: "History · Chapters 7–8 · Test Fri, Oct 23, 2026",
+        blurb: "Crash course, flashcards, worksheet fill-ins, art ID, map of Italy, quiz, and essay prep.",
+        added: "2026-10-22",
+      },
+    ];
+
+    const list = document.getElementById("guides");
+    GUIDES.slice()
+      .sort((a, b) => b.added.localeCompare(a.added))
+      .forEach((guide, i) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.className = "guide";
+        a.href = guide.path;
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = guide.title;
+        if (i === 0) {
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = "Newest";
+          title.appendChild(badge);
+        }
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = guide.meta;
+        const blurb = document.createElement("span");
+        blurb.className = "blurb";
+        blurb.textContent = guide.blurb;
+        a.append(title, meta, blurb);
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+  </script>
 </body>
 </html>

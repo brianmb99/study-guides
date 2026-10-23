@@ -253,6 +253,7 @@
         "Nothing is saved on this phone. If you close the tab, start the round again. Tonight, just keep going."
       )
     );
+    view.appendChild(h("a", { class: "credits-link", href: "../" }, "All study guides"));
     view.appendChild(h("a", { class: "credits-link", href: "#/credits" }, "Image credits"));
     view.appendChild(
       h(
