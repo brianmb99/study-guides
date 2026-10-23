@@ -30,6 +30,17 @@
   let actions = { prev: null, next: null, primary: null };
   let lastPath = null;
   let renderToken = 0;
+  let toTop = false;
+
+  function run(fn, top) {
+    if (!fn) return;
+    toTop = top || fn === actions.prev || fn === actions.next;
+    try {
+      fn();
+    } finally {
+      toTop = false;
+    }
+  }
   let swallowClick = false;
 
   function h(tag, attrs, kids) {
@@ -171,7 +182,7 @@
         item.label
       );
       button.addEventListener("click", () => {
-        if (!item.disabled && item.on) item.on();
+        if (!item.disabled) run(item.on, item.top);
       });
       bar.appendChild(button);
     });
@@ -381,7 +392,7 @@ function renderCards(view) {
     if (!order.length) {
       chrome("Flashcards", "0");
       view.appendChild(h("p", null, "This deck is empty."));
-      setBar([{ label: "All cards", primary: true, on: () => setDeck("all") }]);
+      setBar([{ label: "All cards", primary: true, top: true, on: () => setDeck("all") }]);
       return;
     }
     state.cards.i = clamp(state.cards.i, 0, order.length - 1);
@@ -500,7 +511,7 @@ function renderCards(view) {
         render();
       };
       actions.primary = again;
-      setBar([{ label: "Practice again", primary: true, on: again }]);
+      setBar([{ label: "Practice again", primary: true, top: true, on: again }]);
       return;
     }
 
@@ -552,8 +563,8 @@ function renderCards(view) {
       view.appendChild(h("p", null, item.explain));
       const got = h("button", { type: "button", class: "got" }, "Got it");
       const later = h("button", { type: "button" }, "Not yet");
-      got.addEventListener("click", () => markBlank(true));
-      later.addEventListener("click", () => markBlank(false));
+      got.addEventListener("click", () => run(() => markBlank(true), true));
+      later.addEventListener("click", () => run(() => markBlank(false), true));
       view.appendChild(h("div", { class: "pair" }, [got, later]));
     }
 
@@ -762,6 +773,7 @@ function renderCards(view) {
       {
         label: "Review misses",
         disabled: !state.quiz.missed.length,
+        top: true,
         on: () => {
           const ids = state.quiz.missed.slice();
           startQuiz(ids);
@@ -771,6 +783,7 @@ function renderCards(view) {
       {
         label: "New round",
         primary: true,
+        top: true,
         on: () => {
           startQuiz(null);
           render();
@@ -1168,7 +1181,7 @@ function renderCards(view) {
       render();
     };
     actions.primary = again;
-    setBar([{ label: "Try again", primary: true, on: again }]);
+    setBar([{ label: "Try again", primary: true, top: true, on: again }]);
   }
 
   function renderEssays(view) {
@@ -1328,7 +1341,7 @@ function renderCards(view) {
     const draw = routes[path] || renderMissing;
     if (path === "/credits") renderCredits(view, token);
     else draw(view);
-    if (changed) {
+    if (changed || toTop) {
       window.scrollTo(0, 0);
       view.scrollTop = 0;
     }
@@ -1340,15 +1353,15 @@ function renderCards(view) {
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      if (actions.prev) actions.prev();
+      run(actions.prev);
     } else if (event.key === "ArrowRight") {
       event.preventDefault();
-      if (actions.next) actions.next();
+      run(actions.next);
     } else if (event.key === " " || event.key === "Enter") {
       if (event.target && event.target.closest && event.target.closest("button, a, summary")) return;
       if (!actions.primary) return;
       event.preventDefault();
-      actions.primary();
+      run(actions.primary);
     }
   }
 
@@ -1395,8 +1408,8 @@ function renderCards(view) {
       window.setTimeout(() => {
         swallowClick = false;
       }, 400);
-      if (dx < 0 && actions.next) actions.next();
-      else if (dx > 0 && actions.prev) actions.prev();
+      if (dx < 0) run(actions.next);
+      else if (dx > 0) run(actions.prev);
     });
   }
 
