@@ -63,12 +63,63 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
+    @media (min-width: 900px) {
+      body {
+        background:
+          radial-gradient(900px 420px at 50% 0%, #f4e7cf 0%, #e4d3b4 52%, #d8c29a 100%);
+      }
+      main {
+        max-width: 1040px;
+        min-height: 100vh;
+        padding: 64px 48px 80px;
+        background: #f7f0e1;
+        box-shadow:
+          0 0 0 1px rgba(156, 52, 24, 0.12),
+          0 18px 50px rgba(60, 30, 10, 0.12);
+      }
+      h1 {
+        font-size: 3rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+      h1::after {
+        content: "";
+        display: block;
+        width: 72px;
+        height: 4px;
+        margin-top: 14px;
+        background: #9c3418;
+        border-radius: 2px;
+      }
+      .lede {
+        max-width: 36rem;
+        font-size: 1.15rem;
+        margin-bottom: 28px;
+      }
+      ul {
+        grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        gap: 16px;
+      }
+      a.guide {
+        height: 100%;
+        padding: 20px 20px 18px;
+      }
+    }
+    @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+      a.guide:hover {
+        background: #fff;
+        border-color: #c9a36a;
+        box-shadow: 0 10px 24px rgba(60, 30, 10, 0.08);
+      }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>Study Guides</h1>
-    <p class="lede">Flashcards, quizzes, and maps that teach as you go. Newest first.</p>
+    <header>
+      <h1>Study Guides</h1>
+      <p class="lede">Flashcards, quizzes, and maps that teach as you go. Newest first.</p>
+    </header>
     <ul id="guides"></ul>
     <noscript>
       <ul><li><a class="guide" href="renaissance/"><span class="title">The Renaissance</span></a></li></ul>
@@ -80,7 +131,7 @@
       {
         path: "renaissance/",
         title: "The Renaissance",
-        meta: "History · Chapters 7–8 · Test Fri, Oct 23, 2026",
+        meta: "History · Chapters 7–8 · Test Tue, Oct 27, 2026",
         blurb: "Crash course, flashcards, worksheet fill-ins, art ID, map of Italy, quiz, and essay prep.",
         added: "2026-10-22",
       },

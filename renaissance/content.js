@@ -4,8 +4,13 @@
 
 const STUDY = {
   plan: {
-    tonight:
-      "Tonight (about 45 min): Crash Course → Flashcards → Fill-in-the-Blank → Art ID → Map → Quiz → Essays. Tomorrow morning: Cram Sheet + one more Quiz round.",
+    days: [
+      ["Friday", "Crash Course, then Flashcards (All)."],
+      ["Saturday", "Fill-in-the-Blank, Art ID, and the Map."],
+      ["Sunday", "Two Quiz rounds. Redo your misses, then flip those Flashcards."],
+      ["Monday", "Essays: write one practice paragraph for each prompt, by hand. Then one Quiz round."],
+      ["Tuesday morning", "Cram Sheet, then one last Quiz round."],
+    ],
     parts: [
       {
         n: "1",

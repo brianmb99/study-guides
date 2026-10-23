@@ -120,6 +120,36 @@
     }
   }
 
+  function ensureDeskNav() {
+    let nav = document.getElementById("desk-nav");
+    if (nav) return nav;
+    nav = h("nav", { id: "desk-nav", class: "desk-nav", "aria-label": "Study modes" });
+    [
+      ["/learn", "Crash Course"],
+      ["/cards", "Flashcards"],
+      ["/blanks", "Fill-in-the-Blank"],
+      ["/art", "Art ID"],
+      ["/map", "Map"],
+      ["/quiz", "Quiz"],
+      ["/essays", "Essays"],
+      ["/cram", "Cram Sheet"],
+    ].forEach((mode) => {
+      nav.appendChild(h("a", { href: "#" + mode[0], "data-path": mode[0] }, mode[1]));
+    });
+    document.querySelector(".topbar").appendChild(nav);
+    return nav;
+  }
+
+  function syncNav(path) {
+    const nav = ensureDeskNav();
+    nav.querySelectorAll("a").forEach((link) => {
+      const on = link.getAttribute("data-path") === path;
+      link.classList.toggle("is-on", on);
+      if (on) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
+
   function setBar(items) {
     const bar = $("bottombar");
     bar.textContent = "";
@@ -207,14 +237,14 @@
     chrome("Renaissance Test Prep", "");
     view.appendChild(
       para(
-        "Test Friday. This page quizzes you and teaches you on the same tap. Short sentences. Lots of repeats. You can do this."
+        "Test Tuesday, October 27. This page quizzes you and teaches you on the same tap. Short sentences. Lots of repeats. You can do this."
       )
     );
     view.appendChild(
       h(
         "p",
         { class: "quiet" },
-        "Tonight, go top to bottom (about 45 min). Tomorrow morning: Cram Sheet + one more Quiz round."
+        "20–30 minutes a day until Tuesday beats one long cram. The plan is below the list."
       )
     );
 
@@ -226,7 +256,7 @@
       ["#/map", "Map", "Rome, Florence, Venice, and two seas."],
       ["#/quiz", "Quiz", "15 questions a round. Misses come back."],
       ["#/essays", "Essays", "A checklist, a recipe, and a sample."],
-      ["#/cram", "Cram Sheet", "Every fact on one page, for the morning."],
+      ["#/cram", "Cram Sheet", "Every fact on one page, for test morning."],
     ];
     const grid = h("div", { class: "tiles" });
     tiles.forEach((tile, i) => {
@@ -237,7 +267,13 @@
     });
     view.appendChild(grid);
 
-    view.appendChild(h("h2", null, "Test Friday: what's on it"));
+    const days = h("ol", { class: "parts days" });
+    STUDY.plan.days.forEach((day) => {
+      const li = h("li");
+      li.appendChild(h("span", { class: "part-name" }, day[0]));
+      li.appendChild(document.createTextNode(" — " + day[1]));
+      days.appendChild(li);
+    });
     const list = h("ol", { class: "parts" });
     STUDY.plan.parts.forEach((part) => {
       const li = h("li");
@@ -245,12 +281,18 @@
       li.appendChild(document.createTextNode(" — " + part.help));
       list.appendChild(li);
     });
-    view.appendChild(list);
+    const planCol = h("section", { class: "home-col" });
+    planCol.appendChild(h("h2", null, "Plan before Tuesday"));
+    planCol.appendChild(days);
+    const testCol = h("section", { class: "home-col" });
+    testCol.appendChild(h("h2", null, "Test Tuesday: what's on it"));
+    testCol.appendChild(list);
+    view.appendChild(h("div", { class: "home-cols" }, [planCol, testCol]));
     view.appendChild(
       h(
         "p",
         { class: "quiet" },
-        "Nothing is saved on this phone. If you close the tab, start the round again. Tonight, just keep going."
+        "Nothing is saved on this device. If you close the tab, just start the round again."
       )
     );
     view.appendChild(h("a", { class: "credits-link", href: "../" }, "All study guides"));
@@ -271,10 +313,14 @@
     const card = cards[i];
     chrome("Crash Course", i + 1 + " / " + cards.length);
     view.appendChild(h("p", { class: "quiet" }, "Read it once. The quizzes will make it stick."));
-    view.appendChild(h("h2", null, card.title));
-    if (card.image) view.appendChild(figure(card.image, card.alt, card.title));
-    card.paragraphs.forEach((text) => view.appendChild(para(text)));
-    view.appendChild(teachBox("", card.hook));
+    const split = h("div", { class: card.image ? "learn-split has-figure" : "learn-split" });
+    split.appendChild(h("h2", null, card.title));
+    if (card.image) split.appendChild(figure(card.image, card.alt, card.title));
+    const copy = h("div", { class: "learn-copy" });
+    card.paragraphs.forEach((text) => copy.appendChild(para(text)));
+    copy.appendChild(teachBox("", card.hook));
+    split.appendChild(copy);
+    view.appendChild(split);
 
     const go = (delta) => {
       state.learnI = clamp(state.learnI + delta, 0, cards.length - 1);
@@ -614,8 +660,11 @@ function renderCards(view) {
     const picked = state.quiz.picks[i] || null;
     chrome("Quiz", i + 1 + " / " + round.length);
     view.appendChild(h("p", { class: "quiet" }, "Tap an answer. You will see why right away."));
-    if (q.image) view.appendChild(figure(q.image, q.alt, "Artwork"));
-    view.appendChild(h("p", { class: "prompt" }, q.q));
+    const split = h("div", { class: q.image ? "quiz-split has-figure" : "quiz-split" });
+    if (q.image) split.appendChild(figure(q.image, q.alt, "Artwork"));
+    const copy = h("div", { class: "quiz-copy" });
+    copy.appendChild(h("p", { class: "prompt" }, q.q));
+    const choices = h("div", { class: "choices" });
     q.choices.forEach((choice) => {
       let cls = "choice";
       let tag = "";
@@ -632,11 +681,12 @@ function renderCards(view) {
       button.appendChild(document.createTextNode(choice));
       if (tag) button.appendChild(h("span", { class: "tag" }, tag));
       button.addEventListener("click", () => pickQuiz(choice));
-      view.appendChild(button);
+      choices.appendChild(button);
     });
-    if (picked) {
-      view.appendChild(teachBox(q.explain, q.hook));
-    }
+    copy.appendChild(choices);
+    if (picked) copy.appendChild(teachBox(q.explain, q.hook));
+    split.appendChild(copy);
+    view.appendChild(split);
 
     const go = (delta) => {
       const next = state.quiz.i + delta;
@@ -730,7 +780,7 @@ function renderCards(view) {
   }
 
   function scoreNote(correct, total) {
-    if (correct === total) return "Clean sweep. One more round tomorrow morning and it will stay.";
+    if (correct === total) return "Clean sweep. One more round on another day and it will stay.";
     if (correct >= Math.ceil(total * 0.8)) return "That is a strong round. Review the misses, then rest.";
     if (correct >= Math.ceil(total * 0.5)) {
       return "You already know a lot of this. Review the misses. Those are the ones that will stick.";
@@ -743,43 +793,57 @@ function renderCards(view) {
     state.artI = clamp(state.artI, 0, items.length - 1);
     const item = items[state.artI];
     chrome("Art ID", state.artI + 1 + " / " + items.length);
-    if (item.bonus) view.appendChild(h("p", { class: "banner" }, "Bonus — may be in your book"));
-    view.appendChild(h("p", { class: "prompt" }, item.prompt));
+    const lead = h("div", { class: "art-lead" });
+    if (item.bonus) lead.appendChild(h("p", { class: "banner" }, "Bonus — may be in your book"));
+    lead.appendChild(h("p", { class: "prompt" }, item.prompt));
 
     if (item.kind === "compare") {
+      const layout = h("div", { class: "art-compare" });
+      layout.appendChild(lead);
       const grid = h("div", { class: "compare-grid" });
       grid.appendChild(compareFigure(item.left));
       grid.appendChild(compareFigure(item.right));
-      view.appendChild(grid);
+      layout.appendChild(grid);
       if (state.artRevealed) {
-        if (item.also) view.appendChild(compareFigure(item.also));
-        view.appendChild(h("h3", null, "Middle Ages"));
-        view.appendChild(listOf("ul", "checklist", item.medieval));
-        view.appendChild(h("h3", null, "Renaissance"));
-        view.appendChild(listOf("ul", "checklist", item.renaissance));
-        view.appendChild(teachBox(item.connection, item.hook));
+        if (item.also) layout.appendChild(h("div", { class: "compare-also" }, compareFigure(item.also)));
+        const lists = h("div", { class: "compare-lists" });
+        const medieval = h("div", { class: "compare-col" });
+        medieval.appendChild(h("h3", null, "Middle Ages"));
+        medieval.appendChild(listOf("ul", "checklist", item.medieval));
+        const renaissance = h("div", { class: "compare-col" });
+        renaissance.appendChild(h("h3", null, "Renaissance"));
+        renaissance.appendChild(listOf("ul", "checklist", item.renaissance));
+        lists.append(medieval, renaissance);
+        layout.appendChild(lists);
+        layout.appendChild(teachBox(item.connection, item.hook));
       }
+      view.appendChild(layout);
     } else {
+      const split = h("div", { class: "art-split" });
+      split.appendChild(lead);
       const fallback = state.artRevealed ? item.title : "Image";
-      view.appendChild(figure(item.file, item.alt, fallback));
+      split.appendChild(figure(item.file, item.alt, fallback));
       if (state.artRevealed) {
-        view.appendChild(h("h2", null, item.title));
+        const reveal = h("div", { class: "art-reveal" });
+        reveal.appendChild(h("h2", null, item.title));
         if (item.kind === "place") {
-          view.appendChild(h("p", null, "This is a city, not a painting."));
+          reveal.appendChild(h("p", null, "This is a city, not a painting."));
         } else if (item.artist) {
           const line = h("p");
           line.appendChild(h("strong", null, "Artist: "));
           line.appendChild(document.createTextNode(item.artist));
-          view.appendChild(line);
+          reveal.appendChild(line);
         }
         const where = h("p");
         where.appendChild(h("strong", null, "Place: "));
         where.appendChild(document.createTextNode(item.place));
-        view.appendChild(where);
-        view.appendChild(h("h3", null, "How to recognize it"));
-        view.appendChild(listOf("ul", "clues", item.clues));
-        view.appendChild(teachBox(item.connection, item.hook));
+        reveal.appendChild(where);
+        reveal.appendChild(h("h3", null, "How to recognize it"));
+        reveal.appendChild(listOf("ul", "clues", item.clues));
+        reveal.appendChild(teachBox(item.connection, item.hook));
+        split.appendChild(reveal);
       }
+      view.appendChild(split);
     }
 
     const reveal = () => {
@@ -876,15 +940,17 @@ function renderCards(view) {
     const ol = h("ol");
     STUDY.map.tips.forEach((tip) => ol.appendChild(h("li", null, tip)));
     tips.appendChild(ol);
-    view.appendChild(tips);
+    const board = h("div", { class: "map-board" });
+    board.appendChild(tips);
+    view.appendChild(board);
 
-    if (state.map.mode === "learn") renderMapLearn(view);
-    else if (state.map.over) renderMapDone(view);
-    else if (state.map.mode === "find") renderMapFind(view);
-    else renderMapName(view);
+    if (state.map.mode === "learn") renderMapLearn(board);
+    else if (state.map.over) renderMapDone(board);
+    else if (state.map.mode === "find") renderMapFind(board);
+    else renderMapName(board);
   }
 
-  function renderMapCanvas(view, options) {
+  function renderMapCanvas(options) {
     const wrap = h("div", { class: "map-wrap" });
     const img = h("img", { class: "map-img", alt: STUDY.map.alt });
     const ready = () => img.classList.add("is-ready");
@@ -915,13 +981,14 @@ function renderCards(view) {
       layer.appendChild(button);
     });
     wrap.appendChild(layer);
-    view.appendChild(wrap);
+    return wrap;
   }
 
   function renderMapLearn(view) {
-    view.appendChild(h("p", null, "Tap a pin. Filled dots are cities. Square rings are seas."));
     const selected = placeById(state.map.selected) || STUDY.places[0];
-    renderMapCanvas(view, {
+    const lead = h("div", { class: "map-lead" });
+    lead.appendChild(h("p", null, "Tap a pin. Filled dots are cities. Square rings are seas."));
+    const canvas = renderMapCanvas({
       labelFor: (place) => place.name,
       classFor: (place) => (place.id === selected.id ? "is-hot" : ""),
       onPin: (place) => {
@@ -931,12 +998,14 @@ function renderCards(view) {
         if (fact) fact.scrollIntoView({ block: "nearest" });
       },
     });
+    const side = h("div", { class: "map-side" });
     const fact = h("div", { class: "panel", id: "place-fact" });
     fact.appendChild(h("h2", null, selected.n + ". " + selected.name));
     fact.appendChild(h("p", null, selected.where));
     fact.appendChild(h("p", null, selected.fact));
     fact.appendChild(teachBox("", selected.hook));
-    view.appendChild(fact);
+    side.appendChild(fact);
+    view.appendChild(h("div", { class: "map-split" }, [lead, canvas, side]));
 
     const order = STUDY.places.map((place) => place.id);
     const index = Math.max(0, order.indexOf(selected.id));
@@ -956,11 +1025,12 @@ function renderCards(view) {
 
   function renderMapFind(view) {
     const target = placeById(state.map.order[state.map.step]);
-    view.appendChild(h("p", { class: "prompt" }, "Tap " + target.name));
-    view.appendChild(
+    const lead = h("div", { class: "map-lead" });
+    lead.appendChild(h("p", { class: "prompt" }, "Tap " + target.name));
+    lead.appendChild(
       h("p", { class: "quiet" }, "Question " + (state.map.step + 1) + " of " + state.map.order.length)
     );
-    renderMapCanvas(view, {
+    const canvas = renderMapCanvas({
       blind: !state.map.locked,
       labelFor: (place) => (state.map.locked ? place.name : "Unlabeled pin"),
       classFor: (place) => pinClass(place, target),
@@ -973,17 +1043,20 @@ function renderCards(view) {
         render();
       },
     });
-    if (state.map.locked) view.appendChild(mapFeedback(target));
+    const side = h("div", { class: "map-side" });
+    if (state.map.locked) side.appendChild(mapFeedback(target));
+    view.appendChild(h("div", { class: "map-split" }, [lead, canvas, side]));
     mapQuestionBar(target);
   }
 
   function renderMapName(view) {
     const target = placeById(state.map.order[state.map.step]);
-    view.appendChild(h("p", { class: "prompt" }, "What is the highlighted pin?"));
-    view.appendChild(
+    const lead = h("div", { class: "map-lead" });
+    lead.appendChild(h("p", { class: "prompt" }, "What is the highlighted pin?"));
+    lead.appendChild(
       h("p", { class: "quiet" }, "Question " + (state.map.step + 1) + " of " + state.map.order.length)
     );
-    renderMapCanvas(view, {
+    const canvas = renderMapCanvas({
       blind: true,
       labelFor: () => "Map pin",
       classFor: (place) => {
@@ -992,6 +1065,7 @@ function renderCards(view) {
       },
       onPin: () => {},
     });
+    const side = h("div", { class: "map-side" });
     state.map.choices.forEach((id) => {
       const place = placeById(id);
       let cls = "choice";
@@ -1015,9 +1089,10 @@ function renderCards(view) {
         say(id === target.id ? "Yes. " + target.name : "Not quite. It is " + target.name + ".");
         render();
       });
-      view.appendChild(button);
+      side.appendChild(button);
     });
-    if (state.map.locked) view.appendChild(mapFeedback(target));
+    if (state.map.locked) side.appendChild(mapFeedback(target));
+    view.appendChild(h("div", { class: "map-split" }, [lead, canvas, side]));
     mapQuestionBar(target);
   }
 
@@ -1159,15 +1234,17 @@ function renderCards(view) {
       h(
         "p",
         null,
-        "Tomorrow morning, read this once slowly. If a line feels fuzzy, that is the card to flip again."
+        "On test morning, read this once slowly. If a line feels fuzzy, that is the card to flip again."
       )
     );
     const wrap = h("div", { class: "cram" });
     STUDY.cram.forEach((group) => {
-      wrap.appendChild(h("h2", null, group.heading));
+      const block = h("section", { class: "cram-group" });
+      block.appendChild(h("h2", null, group.heading));
       const ul = h("ul");
       group.lines.forEach((line) => ul.appendChild(h("li", null, line)));
-      wrap.appendChild(ul);
+      block.appendChild(ul);
+      wrap.appendChild(block);
     });
     view.appendChild(wrap);
     setBar(null);
@@ -1240,6 +1317,8 @@ function renderCards(view) {
     }
     const token = ++renderToken;
     const path = currentPath();
+    document.body.dataset.mode = path === "/" ? "home" : path.replace(/^\//, "");
+    syncNav(path);
     const changed = path !== lastPath;
     lastPath = path;
     actions = { prev: null, next: null, primary: null };
@@ -1249,7 +1328,10 @@ function renderCards(view) {
     const draw = routes[path] || renderMissing;
     if (path === "/credits") renderCredits(view, token);
     else draw(view);
-    if (changed) window.scrollTo(0, 0);
+    if (changed) {
+      window.scrollTo(0, 0);
+      view.scrollTop = 0;
+    }
   }
 
   function onKey(event) {
