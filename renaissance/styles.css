@@ -1453,3 +1453,26 @@ details.sample > summary {
     outline-offset: 2px;
   }
 }
+
+.offline-status {
+  margin: 0.7rem 0 0.4rem;
+  color: #5b4a36;
+  font-size: 0.85rem;
+}
+
+.offline-refresh {
+  margin: 0 0 0.35rem;
+  border: 2px solid #9c3418;
+  color: #6e2412;
+  background: #fffaf2;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.offline-refresh:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

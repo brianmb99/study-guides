@@ -1,9 +1,9 @@
 {
-  "name": "Renaissance Test Prep",
-  "short_name": "Renaissance",
+  "name": "Study Guides",
+  "short_name": "Study Guides",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
-  "id": "./",
   "display": "standalone",
   "background_color": "#f7f0e1",
   "theme_color": "#f7f0e1",

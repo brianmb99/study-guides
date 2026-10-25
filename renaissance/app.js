@@ -250,18 +250,6 @@
     return STUDY.places.find((place) => place.id === id);
   }
 
-  /* ---------- offline ---------- */
-
-  function offlineStatusText() {
-    if (navigator.serviceWorker.controller) return "Ready offline. Works with no internet.";
-    return "Saving for offline…";
-  }
-
-  function paintOfflineStatus(text) {
-    const el = document.querySelector(".offline-status");
-    if (el) el.textContent = text;
-  }
-
   /* ---------- views ---------- */
 
   function renderHome(view) {
@@ -320,9 +308,9 @@
     testCol.appendChild(h("h2", null, "Test Tuesday: what's on it"));
     testCol.appendChild(list);
     view.appendChild(h("div", { class: "home-cols" }, [planCol, testCol]));
-    if ("serviceWorker" in navigator) {
-      view.appendChild(h("p", { class: "quiet offline-status" }, offlineStatusText()));
-    }
+    const offline = h("div");
+    view.appendChild(offline);
+    if (window.StudyOffline) window.StudyOffline.mount(offline);
     view.appendChild(
       h(
         "p",
@@ -1982,20 +1970,4 @@ function renderCards(view) {
   window.addEventListener("hashchange", render);
   bindSwipe($("view"));
   render();
-
-  if ("serviceWorker" in navigator) {
-    const markReady = () => {
-      paintOfflineStatus("Ready offline. Works with no internet.");
-    };
-    navigator.serviceWorker.addEventListener("controllerchange", markReady);
-    navigator.serviceWorker.ready
-      .then((reg) => {
-        const active = reg.active;
-        if (navigator.serviceWorker.controller || (active && active.state === "activated")) markReady();
-      })
-      .catch(() => {});
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    });
-  }
 })();

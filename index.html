@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f7f0e1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Study Guides">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Study Guides</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect fill='%239c3418' width='16' height='16' rx='2'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html { font-size: 18px; }
@@ -112,6 +118,29 @@
         box-shadow: 0 10px 24px rgba(60, 30, 10, 0.08);
       }
     }
+    .offline-status {
+      margin: 16px 0 8px;
+      color: #5b4a36;
+      font-size: 0.85rem;
+    }
+    .offline-refresh {
+      border: 2px solid #9c3418;
+      color: #6e2412;
+      background: #fffaf2;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .offline-refresh:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    .note {
+      margin: 14px 0 0;
+      color: #5b4a36;
+    }
   </style>
 </head>
 <body>
@@ -124,6 +153,8 @@
     <noscript>
       <ul><li><a class="guide" href="renaissance/"><span class="title">The Renaissance</span></a></li></ul>
     </noscript>
+    <div id="offline"></div>
+    <p class="note">Add it to your home screen: Share, then Add to Home Screen (iPhone), or the browser menu, then Install app (Android/Chrome).</p>
   </main>
   <script>
     // Add new guides here; the list always sorts newest first by `added`.
@@ -164,6 +195,11 @@
         li.appendChild(a);
         list.appendChild(li);
       });
+  </script>
+  <script src="offline.js"></script>
+  <script>
+    var offlineBox = document.getElementById("offline");
+    if (window.StudyOffline) window.StudyOffline.mount(offlineBox);
   </script>
 </body>
 </html>
