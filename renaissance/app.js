@@ -1,5 +1,5 @@
 /* Renaissance Test Prep — routing and study modes.
-   Nothing is saved. Progress lives only until the page is closed. */
+   Quiz progress lives only until the page is closed. */
 
 (function () {
   "use strict";
@@ -250,6 +250,18 @@
     return STUDY.places.find((place) => place.id === id);
   }
 
+  /* ---------- offline ---------- */
+
+  function offlineStatusText() {
+    if (navigator.serviceWorker.controller) return "Ready offline. Works with no internet.";
+    return "Saving for offline…";
+  }
+
+  function paintOfflineStatus(text) {
+    const el = document.querySelector(".offline-status");
+    if (el) el.textContent = text;
+  }
+
   /* ---------- views ---------- */
 
   function renderHome(view) {
@@ -308,11 +320,21 @@
     testCol.appendChild(h("h2", null, "Test Tuesday: what's on it"));
     testCol.appendChild(list);
     view.appendChild(h("div", { class: "home-cols" }, [planCol, testCol]));
+    if ("serviceWorker" in navigator) {
+      view.appendChild(h("p", { class: "quiet offline-status" }, offlineStatusText()));
+    }
     view.appendChild(
       h(
         "p",
         { class: "quiet" },
-        "Nothing is saved on this device. If you close the tab, just start the round again."
+        "Your progress is not saved. If you close the app, just start the round again."
+      )
+    );
+    view.appendChild(
+      h(
+        "p",
+        { class: "quiet" },
+        "Add it to your home screen: Share, then Add to Home Screen (iPhone), or the browser menu, then Install app (Android/Chrome)."
       )
     );
     view.appendChild(h("a", { class: "credits-link", href: "../" }, "All study guides"));
@@ -1960,4 +1982,20 @@ function renderCards(view) {
   window.addEventListener("hashchange", render);
   bindSwipe($("view"));
   render();
+
+  if ("serviceWorker" in navigator) {
+    const markReady = () => {
+      paintOfflineStatus("Ready offline. Works with no internet.");
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", markReady);
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        const active = reg.active;
+        if (navigator.serviceWorker.controller || (active && active.state === "activated")) markReady();
+      })
+      .catch(() => {});
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
 })();
