@@ -10,6 +10,13 @@
     learnI: 0,
     cards: { deck: "all", order: null, i: 0, flipped: false },
     blanks: { queue: null, i: 0, revealed: false, hint: false, finished: false },
+    vocab: {
+      tab: "flip",
+      dir: "word",
+      flip: { queue: null, i: 0, flipped: false, finished: false },
+      match: { round: null, i: 0, picks: {}, firstCorrect: 0, missed: [], tried: {}, phase: "ask", total: 0 },
+      spell: { round: null, i: 0, firstCorrect: 0, missed: [], tried: {}, phase: "ask", total: 0 },
+    },
     quiz: { round: null, i: 0, picks: {}, correct: 0, missed: [], phase: "ask" },
     artI: 0,
     artRevealed: false,
@@ -139,6 +146,7 @@
       ["/learn", "Crash Course"],
       ["/cards", "Flashcards"],
       ["/blanks", "Fill-in-the-Blank"],
+      ["/vocab", "Vocab"],
       ["/art", "Art ID"],
       ["/map", "Map"],
       ["/quiz", "Quiz"],
@@ -263,6 +271,7 @@
       ["#/learn", "Crash Course", "The big story in 12 short cards."],
       ["#/cards", "Flashcards", "Every fact, front and back."],
       ["#/blanks", "Fill-in-the-Blank", "The worksheet sentences, exact."],
+      ["#/vocab", "Vocab", "All " + STUDY.glossary.length + " textbook glossary words. Flip, then match."],
       ["#/art", "Art ID", "Name the work, then learn the clues."],
       ["#/map", "Map", "Rome, Florence, Venice, and two seas."],
       ["#/quiz", "Quiz", "15 questions a round. Misses come back."],
@@ -1263,6 +1272,539 @@ function renderCards(view) {
     setBar(null);
   }
 
+  /* ---------- Glossary vocab ---------- */
+
+  function normWord(text) {
+    return String(text || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[\u2010-\u2015-]/g, " ")
+      .replace(/["'\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u00AB\u00BB\u2039\u203A`]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function vocabTeach(entry) {
+    const box = h("div", { class: "teach" });
+    box.appendChild(para("**" + entry.word + "** (" + entry.pos + ") — " + entry.def));
+    return box;
+  }
+
+  function appendMissed(view, items) {
+    if (!items.length) return;
+    view.appendChild(h("h3", null, "Missed"));
+    const ul = h("ul", { class: "missed-list" });
+    items.forEach((item) => ul.appendChild(h("li", null, item.word + " — " + item.def)));
+    view.appendChild(ul);
+  }
+
+  function vocabChoices(entry) {
+    const others = STUDY.glossary.filter((item) => item.id !== entry.id);
+    const same = shuffle(others.filter((item) => item.pos === entry.pos));
+    const rest = shuffle(others.filter((item) => item.pos !== entry.pos));
+    const distractors = (same.length >= 3 ? same : same.concat(rest)).slice(0, 3);
+    return shuffle([entry.word].concat(distractors.map((item) => item.word)));
+  }
+
+  function matchQuestion(entry) {
+    return {
+      id: entry.id,
+      word: entry.word,
+      pos: entry.pos,
+      def: entry.def,
+      page: entry.page,
+      choices: vocabChoices(entry),
+    };
+  }
+
+  function spellQuestion(entry) {
+    return {
+      id: entry.id,
+      word: entry.word,
+      pos: entry.pos,
+      def: entry.def,
+      page: entry.page,
+      typed: "",
+      checked: false,
+      ok: false,
+      revealed: false,
+    };
+  }
+
+  function resetVocabFlip() {
+    state.vocab.flip = {
+      queue: STUDY.glossary.map((item) => ({
+        id: item.id,
+        word: item.word,
+        pos: item.pos,
+        def: item.def,
+        page: item.page,
+        got: false,
+      })),
+      i: 0,
+      flipped: false,
+      finished: false,
+    };
+  }
+
+  function startVocabMatch(all) {
+    const count = all ? STUDY.glossary.length : Math.min(10, STUDY.glossary.length);
+    const source = shuffle(STUDY.glossary).slice(0, count);
+    state.vocab.match = {
+      round: source.map(matchQuestion),
+      i: 0,
+      picks: {},
+      firstCorrect: 0,
+      missed: [],
+      tried: {},
+      phase: source.length ? "ask" : "done",
+      total: source.length,
+    };
+  }
+
+  function startVocabSpell() {
+    const source = shuffle(STUDY.glossary).slice(0, Math.min(10, STUDY.glossary.length));
+    state.vocab.spell = {
+      round: source.map(spellQuestion),
+      i: 0,
+      firstCorrect: 0,
+      missed: [],
+      tried: {},
+      phase: source.length ? "ask" : "done",
+      total: source.length,
+    };
+  }
+
+  function renderVocab(view) {
+    const segment = h("div", { class: "segment", role: "tablist", "aria-label": "Vocab mode" });
+    [
+      ["flip", "Flip"],
+      ["match", "Match"],
+      ["spell", "Spell it"],
+    ].forEach((pair) => {
+      const button = h("button", {
+        type: "button",
+        role: "tab",
+        "aria-selected": state.vocab.tab === pair[0] ? "true" : "false",
+      }, pair[1]);
+      button.addEventListener("click", () => {
+        if (state.vocab.tab === pair[0]) return;
+        state.vocab.tab = pair[0];
+        if (pair[0] === "flip") resetVocabFlip();
+        else if (pair[0] === "match") startVocabMatch(false);
+        else startVocabSpell();
+        render();
+      });
+      segment.appendChild(button);
+    });
+    view.appendChild(segment);
+    if (state.vocab.tab === "match") renderVocabMatch(view);
+    else if (state.vocab.tab === "spell") renderVocabSpell(view);
+    else renderVocabFlip(view);
+  }
+
+  function toggleVocabFlip() {
+    const flip = state.vocab.flip;
+    if (!flip.queue || flip.finished) return;
+    flip.flipped = !flip.flipped;
+    const entry = flip.queue[flip.i];
+    if (flip.flipped && entry) {
+      say(state.vocab.dir === "def" ? entry.word + ". " + entry.def : entry.def);
+    }
+    render();
+  }
+
+  function markVocab(got) {
+    const flip = state.vocab.flip;
+    const queue = flip.queue;
+    const index = flip.i;
+    if (got) {
+      queue[index].got = true;
+      if (queue.every((item) => item.got)) {
+        flip.finished = true;
+        say("Every glossary word is locked in.");
+        render();
+        return;
+      }
+      let next = index;
+      for (let n = 0; n < queue.length; n += 1) {
+        next = (next + 1) % queue.length;
+        if (!queue[next].got) break;
+      }
+      flip.i = next;
+    } else {
+      const [item] = queue.splice(index, 1);
+      item.got = false;
+      queue.push(item);
+      flip.i = index >= queue.length ? 0 : index;
+      say("Not yet. It will come back in a minute.");
+    }
+    flip.flipped = false;
+    render();
+  }
+
+  function renderVocabFlip(view) {
+    if (!state.vocab.flip.queue) resetVocabFlip();
+    const flip = state.vocab.flip;
+    const queue = flip.queue;
+    const known = queue.filter((item) => item.got).length;
+    chrome("Glossary Vocab", known + " / " + queue.length);
+
+    if (flip.finished) {
+      view.appendChild(h("h2", null, "Every word is locked in."));
+      view.appendChild(
+        h("p", null, "That is the glossary. Run them once more in the morning if you want them automatic.")
+      );
+      const again = () => {
+        resetVocabFlip();
+        render();
+      };
+      actions.primary = again;
+      setBar([{ label: "Practice again", primary: true, top: true, on: again }]);
+      return;
+    }
+
+    flip.i = clamp(flip.i, 0, queue.length - 1);
+    const entry = queue[flip.i];
+    view.appendChild(
+      h("p", { class: "quiet" }, "Flip the card. Got it locks it in. Not yet sends it to the back of the line.")
+    );
+
+    const chips = h("div", { class: "chips", role: "group", "aria-label": "Card direction" });
+    [
+      ["word", "Word first"],
+      ["def", "Definition first"],
+    ].forEach((pair) => {
+      const button = h(
+        "button",
+        { type: "button", class: state.vocab.dir === pair[0] ? "chip is-on" : "chip" },
+        pair[1]
+      );
+      button.setAttribute("aria-pressed", state.vocab.dir === pair[0] ? "true" : "false");
+      button.addEventListener("click", () => {
+        state.vocab.dir = pair[0];
+        flip.flipped = false;
+        render();
+      });
+      chips.appendChild(button);
+    });
+    view.appendChild(chips);
+
+    const shuffleBtn = h("button", { type: "button", class: "text-btn" }, "Shuffle");
+    shuffleBtn.addEventListener("click", () => {
+      flip.queue = shuffle(queue);
+      flip.i = 0;
+      flip.flipped = false;
+      render();
+    });
+    view.appendChild(h("div", { class: "row-actions" }, shuffleBtn));
+    view.appendChild(h("p", { class: "quiet" }, "Card " + (flip.i + 1) + " of " + queue.length));
+    if (entry.got) view.appendChild(h("p", null, h("span", { class: "locked-pill" }, "Locked in")));
+
+    const wordFirst = state.vocab.dir !== "def";
+    const scene = h("div", { class: "flip-scene" });
+    const card = h("div", { class: flip.flipped ? "flip-card is-flipped" : "flip-card" });
+    const front = h("div", {
+      class: "flip-face flip-front",
+      "aria-hidden": flip.flipped ? "true" : "false",
+    });
+    const back = h("div", {
+      class: "flip-face flip-back",
+      "aria-hidden": flip.flipped ? "false" : "true",
+    });
+    if (wordFirst) {
+      front.appendChild(h("p", { class: "prompt" }, entry.word));
+      front.appendChild(h("p", { class: "quiet" }, entry.pos));
+      back.appendChild(h("p", { class: "answer" }, entry.def));
+      back.appendChild(h("p", { class: "quiet" }, "Textbook page " + entry.page));
+    } else {
+      front.appendChild(h("p", { class: "prompt" }, entry.def));
+      back.appendChild(h("p", { class: "answer" }, entry.word));
+      back.appendChild(h("p", { class: "quiet" }, entry.pos));
+      back.appendChild(h("p", { class: "quiet" }, "Textbook page " + entry.page));
+    }
+    front.appendChild(h("p", { class: "quiet tap-hint" }, "Tap the card to flip."));
+    back.appendChild(h("p", { class: "quiet tap-hint" }, "Tap to flip back."));
+    card.appendChild(front);
+    card.appendChild(back);
+    card.addEventListener("click", () => {
+      if (swallowClick) {
+        swallowClick = false;
+        return;
+      }
+      toggleVocabFlip();
+    });
+    scene.appendChild(card);
+    view.appendChild(scene);
+
+    if (flip.flipped) {
+      const got = h("button", { type: "button", class: "got" }, "Got it");
+      const later = h("button", { type: "button" }, "Not yet");
+      got.addEventListener("click", () => run(() => markVocab(true), true));
+      later.addEventListener("click", () => run(() => markVocab(false), true));
+      view.appendChild(h("div", { class: "pair" }, [got, later]));
+    }
+
+    const go = (delta) => {
+      const next = flip.i + delta;
+      if (next < 0 || next >= queue.length) return;
+      flip.i = next;
+      flip.flipped = false;
+      render();
+    };
+    actions.prev = () => go(-1);
+    actions.next = () => go(1);
+    actions.primary = toggleVocabFlip;
+    setBar([
+      { label: "Prev", disabled: flip.i === 0, on: actions.prev },
+      { label: flip.flipped ? "Flip back" : "Flip", primary: true, on: toggleVocabFlip },
+      { label: "Next", disabled: flip.i === queue.length - 1, on: actions.next },
+    ]);
+  }
+
+  function pickVocab(choice) {
+    const match = state.vocab.match;
+    const i = match.i;
+    if (match.picks[i]) return;
+    const q = match.round[i];
+    match.picks[i] = choice;
+    const right = choice === q.word;
+    const first = !match.tried[q.id];
+    match.tried[q.id] = true;
+    if (right) {
+      if (first) match.firstCorrect += 1;
+      say("Yes. " + q.word + ". " + q.def);
+    } else {
+      if (first) match.missed.push({ word: q.word, def: q.def });
+      match.round.push(matchQuestion(q));
+      say("Not quite. " + q.word + ". " + q.def);
+    }
+    render();
+  }
+
+  function renderVocabDone(view, bucket, againFn, extra) {
+    chrome("Glossary Vocab", bucket.firstCorrect + " / " + bucket.total);
+    view.appendChild(h("h2", null, "Round done"));
+    view.appendChild(h("p", { class: "score" }, bucket.firstCorrect + " / " + bucket.total));
+    view.appendChild(h("p", null, "First-try correct / " + bucket.total + "."));
+    view.appendChild(h("p", null, scoreNote(bucket.firstCorrect, bucket.total)));
+    appendMissed(view, bucket.missed);
+    const again = h("button", { type: "button" }, "New round");
+    again.addEventListener("click", () => run(againFn, true));
+    const buttons = [again];
+    if (extra) {
+      const more = h("button", { type: "button", class: "secondary" }, extra.label);
+      more.addEventListener("click", () => run(extra.on, true));
+      buttons.push(more);
+    }
+    view.appendChild(h("div", { class: "stack-btns" }, buttons));
+    actions.primary = againFn;
+    const bar = [];
+    if (extra) bar.push({ label: extra.label, top: true, on: extra.on });
+    bar.push({ label: "New round", primary: true, top: true, on: againFn });
+    setBar(bar);
+  }
+
+  function renderVocabMatch(view) {
+    if (!state.vocab.match.round) startVocabMatch(false);
+    const match = state.vocab.match;
+    if (match.phase === "done") {
+      renderVocabDone(view, match, () => {
+        startVocabMatch(false);
+        render();
+      }, {
+        label: "Drill all words",
+        on: () => {
+          startVocabMatch(true);
+          render();
+        },
+      });
+      return;
+    }
+    const i = match.i;
+    const q = match.round[i];
+    const picked = match.picks[i] || null;
+    chrome("Glossary Vocab", i + 1 + " / " + match.round.length);
+    view.appendChild(
+      h("p", { class: "quiet" }, "Tap the word that matches. A miss comes back later in the round.")
+    );
+    view.appendChild(h("p", { class: "prompt" }, q.def));
+    const choices = h("div", { class: "choices" });
+    q.choices.forEach((choice) => {
+      let cls = "choice";
+      let tag = "";
+      if (picked) {
+        if (choice === q.word) {
+          cls += " is-correct";
+          tag = "Answer";
+        } else if (choice === picked) {
+          cls += " is-wrong";
+          tag = "Not quite";
+        }
+      }
+      const button = h("button", { type: "button", class: cls, disabled: !!picked });
+      button.appendChild(document.createTextNode(choice));
+      if (tag) button.appendChild(h("span", { class: "tag" }, tag));
+      button.addEventListener("click", () => pickVocab(choice));
+      choices.appendChild(button);
+    });
+    view.appendChild(choices);
+    if (picked) view.appendChild(vocabTeach(q));
+
+    const go = (delta) => {
+      const next = match.i + delta;
+      if (next < 0 || next >= match.round.length) {
+        if (delta > 0 && picked && i === match.round.length - 1) {
+          match.phase = "done";
+          render();
+        }
+        return;
+      }
+      if (delta > 0 && !picked) return;
+      match.i = next;
+      render();
+    };
+    actions.prev = () => go(-1);
+    actions.next = () => go(1);
+    actions.primary = picked ? actions.next : null;
+    const onLast = i === match.round.length - 1;
+    setBar([
+      { label: "Prev", disabled: i === 0, on: actions.prev },
+      {
+        label: onLast ? "Finish" : "Next",
+        primary: true,
+        disabled: !picked,
+        on: actions.next,
+      },
+    ]);
+  }
+
+  function spellFieldValue() {
+    const input = document.querySelector(".spell-form input");
+    return input ? input.value : "";
+  }
+
+  function checkSpell() {
+    const spell = state.vocab.spell;
+    if (spell.phase !== "ask") return;
+    const q = spell.round[spell.i];
+    if (!q || q.checked) return;
+    const typed = spellFieldValue();
+    if (!normWord(typed)) {
+      say("Type the word, then check.");
+      return;
+    }
+    q.typed = typed;
+    q.checked = true;
+    q.ok = normWord(typed) === normWord(q.word);
+    const first = !spell.tried[q.id];
+    spell.tried[q.id] = true;
+    if (q.ok && first && !q.revealed) spell.firstCorrect += 1;
+    else if (first) spell.missed.push({ word: q.word, def: q.def });
+    if (!q.ok) spell.round.push(spellQuestion(q));
+    say(q.ok ? "Yes. " + q.word + "." : "Not quite. The word is " + q.word + ".");
+    render();
+  }
+
+  function revealSpell() {
+    const spell = state.vocab.spell;
+    const q = spell.round[spell.i];
+    if (!q || q.checked) return;
+    q.typed = spellFieldValue();
+    q.revealed = true;
+    say("The word is " + q.word + ".");
+    render();
+  }
+
+  function renderVocabSpell(view) {
+    if (!state.vocab.spell.round) startVocabSpell();
+    const spell = state.vocab.spell;
+    if (spell.phase === "done") {
+      renderVocabDone(view, spell, () => {
+        startVocabSpell();
+        render();
+      }, null);
+      return;
+    }
+    const i = spell.i;
+    const q = spell.round[i];
+    chrome("Glossary Vocab", i + 1 + " / " + spell.round.length);
+    view.appendChild(
+      h("p", { class: "quiet" }, "Type the word. A miss comes back later in the round.")
+    );
+    view.appendChild(h("p", { class: "prompt" }, q.def));
+
+    if (!q.checked) {
+      if (q.revealed) {
+        view.appendChild(h("p", { class: "quiet" }, "The word is " + q.word + ". Type it, then check."));
+      }
+      const input = h("input", {
+        type: "text",
+        autocomplete: "off",
+        autocapitalize: "off",
+        spellcheck: "false",
+        "aria-label": "Type the glossary word",
+      });
+      if (q.typed) input.value = q.typed;
+      const form = h("form", { class: "spell-form", autocomplete: "off" }, [
+        input,
+        h("button", { type: "submit", class: "bar-btn primary" }, "Check"),
+      ]);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        checkSpell();
+      });
+      view.appendChild(form);
+      if (!q.revealed) {
+        const show = h("button", { type: "button", class: "text-btn" }, "Show answer");
+        show.addEventListener("click", () => revealSpell());
+        view.appendChild(h("div", { class: "row-actions" }, show));
+      }
+      input.focus({ preventScroll: true });
+    } else {
+      view.appendChild(
+        h(
+          "p",
+          { class: q.ok ? "spell-note is-correct" : "spell-note is-wrong" },
+          q.ok ? "Yes. " + q.word : "Not quite. The word is " + q.word + "."
+        )
+      );
+      view.appendChild(vocabTeach(q));
+    }
+
+    const last = i === spell.round.length - 1;
+    const go = (delta) => {
+      if (delta > 0 && !q.checked) return;
+      const next = spell.i + delta;
+      if (next < 0 || next >= spell.round.length) {
+        if (delta > 0 && q.checked && last) {
+          spell.phase = "done";
+          render();
+        }
+        return;
+      }
+      spell.i = next;
+      render();
+    };
+    actions.prev = () => go(-1);
+    actions.next = () => go(1);
+    actions.primary = q.checked ? actions.next : checkSpell;
+    if (!q.checked) {
+      setBar([
+        { label: "Prev", disabled: i === 0, on: actions.prev },
+        { label: "Check", primary: true, on: checkSpell },
+        { label: "Next", disabled: true, on: actions.next },
+      ]);
+    } else {
+      setBar([
+        { label: "Prev", disabled: i === 0, on: actions.prev },
+        { label: last ? "Finish" : "Next", primary: true, on: actions.next },
+      ]);
+    }
+  }
+
   function renderCredits(view, token) {
     chrome("Credits", "");
     view.appendChild(h("h2", null, "Image credits"));
@@ -1315,6 +1857,7 @@ function renderCards(view) {
     "/learn": renderLearn,
     "/cards": renderCards,
     "/blanks": renderBlanks,
+    "/vocab": renderVocab,
     "/quiz": renderQuiz,
     "/art": renderArt,
     "/map": renderMap,

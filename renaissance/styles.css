@@ -775,6 +775,39 @@ details.sample > summary {
   margin: 4px 0;
 }
 
+.spell-form {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.spell-form input {
+  width: 100%;
+  border: 2px solid #b89a6a;
+  border-radius: 12px;
+  background: #fffaf2;
+  padding: 12px 14px;
+}
+
+.spell-note.is-correct {
+  color: #0e6b3a;
+  font-weight: 700;
+}
+
+.spell-note.is-wrong {
+  color: #9d1c1c;
+  font-weight: 700;
+}
+
+.missed-list {
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.2rem;
+}
+
+.missed-list li {
+  margin: 0.35rem 0;
+}
+
 @media (min-width: 700px) {
   body {
     padding-top: 16px;
