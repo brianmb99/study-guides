@@ -1,7 +1,7 @@
 /* Add new guides' files to PRECACHE. Bump VERSION when the list changes. */
 "use strict";
 
-const VERSION = "study-guides-v1";
+const VERSION = "study-guides-v2";
 const CACHE = VERSION;
 const NET_MS = 3000;
 
@@ -14,6 +14,11 @@ const PRECACHE = [
   "icons/icon-512.png",
   "icons/icon-maskable-512.png",
   "icons/apple-touch-icon.png",
+  "animal-classification/",
+  "animal-classification/index.html",
+  "animal-classification/styles.css",
+  "animal-classification/content.js",
+  "animal-classification/app.js",
   "renaissance/",
   "renaissance/index.html",
   "renaissance/styles.css",
