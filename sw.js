@@ -1,7 +1,7 @@
 /* Add new guides' files to PRECACHE. Bump VERSION when the list changes. */
 "use strict";
 
-const VERSION = "study-guides-v3";
+const VERSION = "study-guides-v4";
 const CACHE = VERSION;
 const NET_MS = 3000;
 

@@ -1,7 +1,7 @@
 {
   "name": "Study Guides",
   "short_name": "Study Guides",
-  "id": "./",
+  "id": "/study-guides/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
