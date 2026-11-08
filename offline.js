@@ -4,6 +4,9 @@
 
   var scriptEl = document.currentScript;
   var root = new URL(".", scriptEl && scriptEl.src ? scriptEl.src : location.href);
+  var onStudyGuides =
+    location.pathname === "/study-guides" || location.pathname.indexOf("/study-guides/") === 0;
+  if (onStudyGuides) root = new URL("/study-guides/", location.origin);
   var supported = "serviceWorker" in navigator;
   var blocks = [];
   var hadController = supported && !!navigator.serviceWorker.controller;

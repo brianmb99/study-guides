@@ -1,7 +1,7 @@
 /* Add new guides' files to PRECACHE. Bump VERSION when the list changes. */
 "use strict";
 
-const VERSION = "study-guides-v4";
+const VERSION = "study-guides-v5";
 const CACHE = VERSION;
 const NET_MS = 3000;
 
@@ -50,7 +50,19 @@ const PRECACHE = [
   "renaissance/assets/art/vitruvian-man.jpg",
 ];
 
+function scopePrefix() {
+  const scopePath = new URL(self.registration.scope).pathname;
+  return scopePath.endsWith("/") ? scopePath : scopePath + "/";
+}
+
+function inApp(url) {
+  if (url.origin !== self.location.origin) return false;
+  const prefix = scopePrefix();
+  return url.pathname === prefix.slice(0, -1) || url.pathname.startsWith(prefix);
+}
+
 function storeBasic(request, response) {
+  if (!inApp(new URL(request.url))) return;
   if (!response || !response.ok || response.type !== "basic" || response.redirected) return;
   const copy = response.clone();
   const key = request.mode === "navigate" ? new Request(request.url) : request;
@@ -59,11 +71,10 @@ function storeBasic(request, response) {
 
 function directoryIndexPath(urlString) {
   const url = new URL(urlString);
-  const scopePath = new URL(self.registration.scope).pathname;
-  const prefix = scopePath.endsWith("/") ? scopePath : scopePath + "/";
+  const prefix = scopePrefix();
   let path = url.pathname;
   if (path + "/" === prefix) path = prefix;
-  if (path !== prefix && !path.startsWith(prefix)) return "index.html";
+  if (path !== prefix && !path.startsWith(prefix)) return null;
   const rel = path.slice(prefix.length);
   if (!rel || rel.endsWith("/")) return rel + "index.html";
   const slash = rel.lastIndexOf("/");
@@ -77,6 +88,7 @@ function matchNavigation(request) {
   return caches.match(request, { ignoreSearch: true }).then((hit) => {
     if (hit) return hit;
     const indexPath = directoryIndexPath(request.url);
+    if (!indexPath) return undefined;
     return caches.match(new Request(indexPath), { ignoreSearch: true }).then((indexed) => {
       if (indexed) return indexed;
       if (indexPath === "index.html") return undefined;
@@ -188,7 +200,7 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
+  if (!inApp(url)) return;
   if (request.mode === "navigate") {
     event.respondWith(navigationResponse(request));
     return;
