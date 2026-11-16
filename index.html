@@ -147,11 +147,12 @@
   <main>
     <header>
       <h1>Study Guides</h1>
-      <p class="lede">Flashcards, quizzes, and maps that teach as you go. Newest first.</p>
+      <p class="lede">Flashcards, quizzes, maps, and diagrams that teach as you go. Newest first.</p>
     </header>
     <ul id="guides"></ul>
     <noscript>
       <ul>
+        <li><a class="guide" href="skeletal-system/"><span class="title">The Skeletal System</span></a></li>
         <li><a class="guide" href="ancient-rome/"><span class="title">Ancient Rome</span></a></li>
         <li><a class="guide" href="animal-classification/"><span class="title">Animal Classification</span></a></li>
         <li><a class="guide" href="renaissance/"><span class="title">The Renaissance</span></a></li>
@@ -163,6 +164,13 @@
   <script>
     // Add new guides here; the list always sorts newest first by `added`.
     const GUIDES = [
+      {
+        path: "skeletal-system/",
+        title: "The Skeletal System",
+        meta: "Science · Label the skeleton",
+        blurb: "All 19 bones from the skeleton sheet on one picture. Learn them, then find and name them.",
+        added: "2026-11-16",
+      },
       {
         path: "ancient-rome/",
         title: "Ancient Rome",
